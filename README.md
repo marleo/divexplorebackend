@@ -3,7 +3,7 @@
 
 This is the backend of diveXplore, our open-source video retrieval software. In the backend, the data preprocessing is done, which then is used by the middleware and frontend of diveXplore.
 
-## Installation
+## Setup ⚙️
 To install the required dependencies, use:
 ```bash
 pip install -r requirements.txt
