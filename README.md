@@ -8,5 +8,6 @@ To install the required dependencies, use:
 ```bash
 pip install -r requirements.txt
 ```
+Additionally, make sure you have installed FFMPEG.
 ---
 If you're looking for diveXplore's frontend & middleware, head here: https://github.com/klschoef/divexplore.
