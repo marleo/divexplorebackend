@@ -7,8 +7,8 @@ import csv
 
 TWIDTH = 320 #160
 THEIGHT = 180 #90
-SUMMARYPATH = "../../LHE/summaries"
-KEYFRAMEPATH = "../../LHE/keyframes"
+SUMMARYPATH = "../output/summaries"
+KEYFRAMEPATH = "../output/keyframes"
 
 if len(sys.argv) < 2:
     print(f'usage: python3 {sys.argv[0]} <scene-file> [thumb-width thumb-height [outputpath]]')
@@ -69,7 +69,6 @@ summaries.append( Summary(18,11,TWIDTH,THEIGHT) )
 csvfile = open(os.path.join(SUMMARYPATH,'summaries.csv'),'a')
 writer = csv.writer(csvfile, delimiter=',')
 
-#with open(f'../Transnetv2Shots/{sys.argv[1]}') as f:
 with open(f'{sys.argv[1]}') as f:
     lines = f.readlines()
 

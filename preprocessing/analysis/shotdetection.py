@@ -163,15 +163,18 @@ def main(video_path):
     #print(f"Distances saved to {distances_file_path}")
 
     videoname = os.path.basename(video_path).split('.')[0]
-    output_folder = f"{videoname}"
 
-    scenesname = f"{videoname}.mp4.scenes.txt"
-    
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-    
+    output_folder = os.path.join("..", "output", "keyframes", videoname)
+    scenes_folder = os.path.join("..", "output", "scenes")
+    scenesname = os.path.join(scenes_folder, f"{videoname}.mp4.scenes.txt")
+
+    # Ensure folders exist
+    os.makedirs(output_folder, exist_ok=True)
+    os.makedirs(scenes_folder, exist_ok=True)
+
+    # Write keyframes and scene times
     with open(scenesname, "w") as sfile:
-        for sfrom,sto,skf,keyframe in keyframes:
+        for sfrom, sto, skf, keyframe in keyframes:
             keyframe_path = os.path.join(output_folder, f"{videoname}_{skf}.png")
             cv2.imwrite(keyframe_path, keyframe)
             print(f"{keyframe_path}")
