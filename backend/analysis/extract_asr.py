@@ -86,15 +86,11 @@ def process_video_with_scenes(video_file, scenes_folder, output_dir):
     speech_recognition(video_file, scenes, output_dir)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: python3 script.py <video_file> <scenes_folder> <output_dir>")
+    if len(sys.argv) != 2:
+        print("Usage: python3 extract_asr.py <video_file>")
     else:
-        #root_path = sys.argv[1]
-        #video_file = sys.argv[2].replace('./', root_path + '/videos/')
         video_file = sys.argv[1]
-        #scenes_folder = sys.argv[3]
-        scenes_folder = sys.argv[2]
-        #output_dir = sys.argv[4]
-        output_dir = sys.argv[3]
+        scenes_folder = "../output/scenes"
+        output_dir = "../output/asr"
 
         process_video_with_scenes(video_file, scenes_folder, output_dir)
