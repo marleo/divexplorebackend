@@ -1,2 +1,2 @@
 #!/bin/bash
-python3 host_index_server.py /videodisk2/vbs2023/keyframes v3cindex.csv
+python3 host_index_server.py ../../backend/output/keyframes ../../backend/output/openclip/openclip-divexplore-ViT-H-14_laion2b_s32b_b79k.csv
