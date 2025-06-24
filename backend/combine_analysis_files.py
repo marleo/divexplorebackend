@@ -7,21 +7,19 @@ import json
 import pymongo
 import pandas as pd
 
-if len(sys.argv) < 9:
-    print(f'usage: python3 {sys.argv[0]} <fps.txt> <shotinfo-folder> <video-info-folder> <texts-folder> <speech-folder> <summaries-folder> <lhe-action-csv-folder> <lhe-inference-json-folder>')
+if len(sys.argv) < 6:
+    print(f'usage: python3 {sys.argv[0]} <fps.txt> <scenes-folder> <texts-folder> <speech-folder> <summaries-folder>')
     exit(1)
 
-myclient = pymongo.MongoClient('mongodb://extreme00.itec.aau.at:27017/')
-mydb = myclient['vbs2025']
+myclient = pymongo.MongoClient('mongodb://localhost:27017')    
+mydb = myclient['divexplore']
 
 fpsfilename = sys.argv[1]
 shotinfodir = sys.argv[2]
-videoinfodir = sys.argv[3]
-textsdir = sys.argv[4]
-speechdir = sys.argv[5]
-lheactiondir = sys.argv[7]
-lheinferencedir = sys.argv[8]
-summarydir = sys.argv[6]
+#videoinfodir = sys.argv[3]
+textsdir = sys.argv[3]
+speechdir = sys.argv[4]
+summarydir = sys.argv[5]
 
 ###############################################################################
 # function to read the video information from the json files
@@ -199,7 +197,7 @@ def collectSummaries(summarydir, videos):
             videos[key]['summaries'] = summarylist
 
 ###############################################################################
-# parse LHE data
+# parse LHE data - unused in OpenSource version
 ###############################################################################
 
 def extractPredictions(video, frame):
@@ -253,8 +251,8 @@ fps = df.to_dict()
 print('reading shot boundaries')
 videosdict = collectShotBoundaries(shotinfodir,fps)
 
-print('collecting vimeo video information')
-collectVideoInfo(videoinfodir, videosdict)
+# print('collecting vimeo video information')
+# collectVideoInfo(videoinfodir, videosdict)
 
 print('collecting texts')
 collectTexts(textsdir, videosdict)
@@ -264,6 +262,8 @@ collectSpeechForVideo(speechdir, videosdict)
 
 print('collecting summaries')
 collectSummaries(summarydir, videosdict)
+
+print(f'connecting to MongoDB at {myclient}')
 
 
 ###############################################################################
@@ -275,8 +275,5 @@ mytxt.drop()
 mycol = mydb['videos']
 mycol.drop()
 mycol.insert_many(videosdict.values())
-#for video in videos.values():
-#    print(f'insert {video["videoid"]}')
-#    mycol.insert_one(video)
 
 print('Done. Now call python3 ../mongo/3createTexts.py')

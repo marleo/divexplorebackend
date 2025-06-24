@@ -9,6 +9,8 @@ const LOGFILE = "vbsqueryserverlog.json";
 
 const DISTINCTIVE_L2DIST1 = 10.0;
 const DISTINCTIVE_L2DIST2 = 15.0;
+const CLIPSERVERURLDEFAULT = "ws://" + config.config_CLIP_SERVER;
+console.log(CLIPSERVERURLDEFAULT);
 const CLIPSERVERURLV3C = "ws://" + config.config_CLIP_SERVER_V3C;
 console.log(CLIPSERVERURLV3C);
 const CLIPSERVERURLMVK = "ws://" + config.config_CLIP_SERVER_MVK;
@@ -21,7 +23,7 @@ let clipWebSocketV3C = null;
 let clipWebSocketMVK = null;
 let clipWebSocketLHE = null;
 
-const mongouri = "mongodb://" + config.config_MONGODB_SERVER; // Replace with your MongoDB connection string
+const mongouri = "mongodb://" + config.config_MONGODB_SERVER;
 const MongoClient = require("mongodb").MongoClient;
 let mongoclient = null;
 connectMongoDB();
@@ -98,6 +100,10 @@ wss.on("connection", (ws) => {
   }
 
   //check CLIPserver connection
+  if (clipWebSocket === null) {
+    console.log("Default clipWebSocket is null, try to re-connect");
+    connectToDefaultCLIPServer();
+  }
   if (clipWebSocketV3C === null) {
     console.log("clipWebSocketV3C is null, try to re-connect");
     connectToCLIPServerV3C();
@@ -131,6 +137,8 @@ wss.on("connection", (ws) => {
       clipWebSocket = clipWebSocketMVK;
     } else if (msg.content.dataset == "lhe") {
       clipWebSocket = clipWebSocketLHE;
+    } else if (msg.content.dataset == "default") {
+      clipWebSocket = clipWebSocket; //default CLIP server
     }
 
     //check video filtering
@@ -369,11 +377,44 @@ function parseParameters(inputString) {
 //////////////////////////////////////////////////////////////////
 // Connection to CLIP server
 //////////////////////////////////////////////////////////////////
+function connectToDefaultCLIPServer() {
+  let dataset = "default";
+  try {
+    console.log("trying to connect to CLIP " + dataset + " ...");
+    clipWebSocket = new WebSocket(config.config_CLIP_SERVER);
+    clipWebSocket.on("open", () => {
+      console.log("connected to CLIP " + dataset + " server");
+    });
+    clipWebSocket.on("close", (event) => {
+      // Handle connection closed
+      clipWebSocket.close();
+      clipWebSocket = null;
+      console.log(
+        "Connection to CLIP " + dataset + " closed",
+        event.code,
+        event.reason
+      );
+    });
+
+    pendingCLIPResults = Array();
+
+    clipWebSocket.on("message", (message) => {
+      handleCLIPResponse(message);
+    });
+    clipWebSocket.on("error", (event) => {
+      console.log("Connection to CLIP " + dataset + " refused");
+    });
+  } catch (error) {
+    console.log("Cannot connect to CLIP ' + dataset + ' server");
+    console.log(error);
+  }
+}
+
 function connectToCLIPServerV3C() {
   let dataset = "V3C";
   try {
     console.log("trying to connect to CLIP " + dataset + " ...");
-    clipWebSocketV3C = new WebSocket(CLIPSERVERURLV3C);
+    clipWebSocketV3C = new WebSocket(CLIPSERVERURLDEFAULT);
 
     clipWebSocketV3C.on("open", () => {
       console.log("connected to CLIP " + dataset + " server");
@@ -680,6 +721,7 @@ function handleCLIPResponse(message) {
   }
 }
 
+connectToDefaultCLIPServer();
 connectToCLIPServerV3C();
 connectToCLIPServerMVK();
 connectToCLIPServerLHE();
@@ -884,8 +926,8 @@ async function getVideoFPS(clientId, queryInput, correlationId) {
 async function getVideoInfo(clientId, queryInput) {
   try {
     let clientSettings = settingsMap.get(clientId);
-    const database = mongoclient.db(config.config_MONGODB); // Replace with your database name
-    const collection = database.collection("videos"); // Replace with your collection name
+    const database = mongoclient.db(config.config_MONGODB);
+    const collection = database.collection("videos");
 
     let query = {};
     query = { videoid: queryInput.videoid };
@@ -899,13 +941,11 @@ async function getVideoInfo(clientId, queryInput) {
     let response = { type: "videoinfo", content: results };
     clientWS = clients.get(clientId);
     clientWS.send(JSON.stringify(response));
-    //console.log('sent back: ' + JSON.stringify(response))
   } catch (error) {
     console.log("error with mongodb: " + error);
     await mongoclient.close();
   } finally {
-    // Close the MongoDB connection when finished
-    //await mongoclient.close();
+
   }
 }
 

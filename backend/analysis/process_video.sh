@@ -16,6 +16,10 @@ SCENES_DIR="../output/scenes"
 KEYFRAMES_DIR="../output/keyframes/$BASENAME"
 SCENE_FILE="$SCENES_DIR/${VIDEO_FILENAME}.scenes.txt"
 
+# 0. Get Video FPS
+echo "=== [0/5] Video FPS ==="
+python3 get_fps.py "$VIDEO_PATH"
+
 # 1. Shot detection
 echo "=== [1/5] Shot Detection ==="
 python3 shotdetection.py "$VIDEO_PATH"

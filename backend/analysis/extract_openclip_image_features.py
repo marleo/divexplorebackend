@@ -8,12 +8,9 @@ import glob
 import csv
 
 imsuffix = 'png'
-if len(sys.argv) < 1:
-    print("please specify <folder with images> and <result-filename-no-suffix> [<image-suffix>]")
-    exit(1)
 
-if len(sys.argv) > 3:
-    imsuffix = sys.argv[3]
+if len(sys.argv) > 1:
+    imsuffix = sys.argv[1]
 
 rootdir = "../output/keyframes"
 resultname = "divexplore"
