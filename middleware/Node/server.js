@@ -19,6 +19,7 @@ const CLIPSERVERURLLHE = "ws://" + config.config_CLIP_SERVER_LHE;
 console.log(CLIPSERVERURLLHE);
 
 const wss = new WebSocket.Server({ noServer: true }); //web socket to client
+let clipWebSocket = null; //default CLIP server
 let clipWebSocketV3C = null;
 let clipWebSocketMVK = null;
 let clipWebSocketLHE = null;
@@ -60,10 +61,7 @@ let settingsMap = new Map();
 //////////////////////////////////////////////////////////////////
 // Connection to client
 //////////////////////////////////////////////////////////////////
-const http = require("http");
 const express = require("express");
-const { LocalConfig } = require("./local-config");
-const { type } = require("os");
 const app = express();
 app.use(cors()); // Enable CORS for all routes
 const port = 8080;
@@ -381,7 +379,7 @@ function connectToDefaultCLIPServer() {
   let dataset = "default";
   try {
     console.log("trying to connect to CLIP " + dataset + " ...");
-    clipWebSocket = new WebSocket(config.config_CLIP_SERVER);
+    clipWebSocket = new WebSocket(CLIPSERVERURLDEFAULT);
     clipWebSocket.on("open", () => {
       console.log("connected to CLIP " + dataset + " server");
     });
@@ -532,8 +530,8 @@ function handleCLIPResponse(message) {
     console.log("combined query");
     let combinedResults = [];
 
-    const database = mongoclient.db(config.config_MONGODB); // Replace with your database name
-    const collection = database.collection("videos"); // Replace with your collection name
+    const database = mongoclient.db(config.config_MONGODB); 
+    const collection = database.collection("videos");     
     var { query, projection } = getMongoQuery(
       year,
       month,
@@ -866,8 +864,8 @@ function getMongoQuery(
 async function queryClusters(clientId) {
   try {
     let clientSettings = settingsMap.get(clientId);
-    const database = mongoclient.db(config.config_MONGODB); // Replace with your database name
-    const collection = database.collection("clusters"); // Replace with your collection name
+    const database = mongoclient.db(config.config_MONGODB); 
+    const collection = database.collection("clusters");
 
     const cursor = collection.find().sort({ members: -1 });
     let results = [];
@@ -889,9 +887,8 @@ async function getVideoFPS(clientId, queryInput, correlationId) {
   try {
     let clientSettings = settingsMap.get(clientId);
     //console.log('received '+ JSON.stringify(queryInput));
-    const database = mongoclient.db(config.config_MONGODB); // Replace with your database name
-    const collection = database.collection("videos"); // Replace with your collection name
-
+    const database = mongoclient.db(config.config_MONGODB); 
+    const collection = database.collection("videos");
     let projection = { fps: 1, duration: 1 };
 
     let query = {};
@@ -1016,8 +1013,8 @@ async function queryPredictions(clientId, queryInput) {
 async function getVideoSummaries(clientId, queryInput) {
   try {
     let clientSettings = settingsMap.get(clientId);
-    const database = mongoclient.db(config.config_MONGODB); // Replace with your database name
-    const collection = database.collection("videos"); // Replace with your collection name
+    const database = mongoclient.db(config.config_MONGODB); 
+    const collection = database.collection("videos"); 
 
     let query = {};
     query = { videoid: queryInput.videoid };
@@ -1139,7 +1136,7 @@ async function queryOCRText(clientId, queryInput) {
       results: Array.from(commonFrames),
       totalresults: totalDocuments,
       scores: new Array(commonFrames.size).fill(1),
-      dataset: "v3c",
+      dataset: dataset,
     };
 
     if (clientSettings.videoFiltering === "first") {
@@ -1158,6 +1155,9 @@ async function queryOCRText(clientId, queryInput) {
       response.results = filteredFrames;
     }
 
+    console.log("sent back: " + JSON.stringify(response));
+
+
     clientWS = clients.get(clientId);
     clientWS.send(JSON.stringify(response));
   } catch (error) {
@@ -1169,8 +1169,8 @@ async function queryOCRText(clientId, queryInput) {
 async function queryVideoID(clientId, queryInput) {
   try {
     let clientSettings = settingsMap.get(clientId);
-    const database = mongoclient.db(config.config_MONGODB); // Replace with your database name
-    const collection = database.collection("videos"); // Replace with your collection name
+    const database = mongoclient.db(config.config_MONGODB); 
+    const collection = database.collection("videos"); 
 
     // Find the document with the matching text
     let cursor;
@@ -1242,8 +1242,8 @@ async function queryVideoID(clientId, queryInput) {
 async function queryMetadata(clientId, queryInput) {
   try {
     let clientSettings = settingsMap.get(clientId);
-    const database = mongoclient.db(config.config_MONGODB); // Replace with your database name
-    const collection = database.collection("videos"); // Replace with your collection name
+    const database = mongoclient.db(config.config_MONGODB); 
+    const collection = database.collection("videos");     
 
     const regexQuery = new RegExp(queryInput.query, "i"); // Create a case-insensitive regular expression
 
@@ -1293,8 +1293,8 @@ async function queryMetadata(clientId, queryInput) {
 async function querySpeech(clientId, queryInput) {
   try {
     let clientSettings = settingsMap.get(clientId);
-    const database = mongoclient.db(config.config_MONGODB); // Replace with your database name
-    const collection = database.collection("videos"); // Replace with your collection name
+    const database = mongoclient.db(config.config_MONGODB); 
+    const collection = database.collection("videos");     
 
     const regexQuery = new RegExp(queryInput.query, "i"); // Create a case-insensitive regular expression
 
@@ -1382,8 +1382,8 @@ async function querySpeech(clientId, queryInput) {
 async function queryClusters(clientId) {
   try {
     let clientSettings = settingsMap.get(clientId);
-    const database = mongoclient.db(config.config_MONGODB); // Replace with your database name
-    const collection = database.collection("clusters"); // Replace with your collection name
+    const database = mongoclient.db(config.config_MONGODB);
+    const collection = database.collection("clusters");     
 
     // Fetch the clusters and sort them by the size of 'memberss' array (in descending order)
     const cursor = collection
@@ -1413,8 +1413,8 @@ async function queryClusters(clientId) {
 async function queryCluster(clientId, queryInput) {
   try {
     let clientSettings = settingsMap.get(clientId);
-    const database = mongoclient.db(config.config_MONGODB); // Replace with your database name
-    const collection = database.collection("clusters"); // Replace with your collection name
+    const database = mongoclient.db(config.config_MONGODB); 
+    const collection = database.collection("clusters");     
 
     // Fetch the clusters and sort them by the size of 'memberss' array (in descending order)
     const document = await collection.findOne({ cluster_id: queryInput.query });

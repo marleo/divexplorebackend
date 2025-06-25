@@ -89,7 +89,7 @@ async def handler(websocket):
 
 
 async def main():
-    port = 8002
+    port = 8001
     if len(sys.argv) > 3:
         port = sys.argv[3]
     async with websockets.serve(handler, "", port):
