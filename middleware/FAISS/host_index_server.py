@@ -29,17 +29,29 @@ def filterAndLabelResults(I, D, resultsPerPage, selectedPage):
     kfresults = []
     kfresultsidx = []
     kfscores = []
+    num_results = len(I[0])
+
+    if num_results == 0:
+        raise Exception("No results from FAISS search.")
+
     ifrom = (selectedPage - 1) * resultsPerPage
     ito = selectedPage * resultsPerPage
-    #for idx in I[0]:
-    print(f'from:{ifrom} to:{ito}')
-    for i in range(ifrom,ito):
+
+    if ifrom >= num_results:
+        return [], [], []
+    
+    for i in range(ifrom, min(ito, num_results)):
         idx = I[0][i]
         score = D[0][i]
+        if idx == -1:
+            continue
         kfresults.append(str(labels[idx]))
         kfresultsidx.append(int(idx))
         kfscores.append(str(score))
+
     return kfresults, kfresultsidx, kfscores
+
+
 
 async def handler(websocket):
     try:
@@ -55,6 +67,7 @@ async def handler(websocket):
                     D = []
                     I = []
                     k = int(event['maxresults']) 
+                    k = min(k, index.ntotal)
                     resultsPerPage = int(event['resultsperpage'])
                     selectedPage = int(event['selectedpage'])
 
@@ -145,10 +158,10 @@ def loadClipFeatures(infoname, csvfilename):
 
 
 keyframe_base_root = sys.argv[1]
-port = 8002
+port = 8001
 if len(sys.argv) > 3:
     port = sys.argv[3]
-index, labels = loadClipFeatures('vbs', sys.argv[2])
+index, labels = loadClipFeatures('diveXplore', sys.argv[2])
 
 asyncio.run(main())
 

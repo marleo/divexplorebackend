@@ -19,7 +19,7 @@ const CLIPSERVERURLLHE = "ws://" + config.config_CLIP_SERVER_LHE;
 console.log(CLIPSERVERURLLHE);
 
 const wss = new WebSocket.Server({ noServer: true }); //web socket to client
-let clipWebSocket = null; //default CLIP server
+let clipWebSocketDefault = null; //default CLIP server
 let clipWebSocketV3C = null;
 let clipWebSocketMVK = null;
 let clipWebSocketLHE = null;
@@ -98,8 +98,8 @@ wss.on("connection", (ws) => {
   }
 
   //check CLIPserver connection
-  if (clipWebSocket === null) {
-    console.log("Default clipWebSocket is null, try to re-connect");
+  if (clipWebSocketDefault === null) {
+    console.log("Default clipWebSocketDefault is null, try to re-connect");
     connectToDefaultCLIPServer();
   }
   if (clipWebSocketV3C === null) {
@@ -136,7 +136,7 @@ wss.on("connection", (ws) => {
     } else if (msg.content.dataset == "lhe") {
       clipWebSocket = clipWebSocketLHE;
     } else if (msg.content.dataset == "default") {
-      clipWebSocket = clipWebSocket; //default CLIP server
+      clipWebSocket = clipWebSocketDefault; //default CLIP server
     }
 
     //check video filtering
@@ -379,14 +379,14 @@ function connectToDefaultCLIPServer() {
   let dataset = "default";
   try {
     console.log("trying to connect to CLIP " + dataset + " ...");
-    clipWebSocket = new WebSocket(CLIPSERVERURLDEFAULT);
-    clipWebSocket.on("open", () => {
+    clipWebSocketDefault = new WebSocket(CLIPSERVERURLDEFAULT);
+    clipWebSocketDefault.on("open", () => {
       console.log("connected to CLIP " + dataset + " server");
     });
-    clipWebSocket.on("close", (event) => {
+    clipWebSocketDefault.on("close", (event) => {
       // Handle connection closed
-      clipWebSocket.close();
-      clipWebSocket = null;
+      clipWebSocketDefault.close();
+      clipWebSocketDefault = null;
       console.log(
         "Connection to CLIP " + dataset + " closed",
         event.code,
@@ -396,14 +396,14 @@ function connectToDefaultCLIPServer() {
 
     pendingCLIPResults = Array();
 
-    clipWebSocket.on("message", (message) => {
+    clipWebSocketDefault.on("message", (message) => {
       handleCLIPResponse(message);
     });
-    clipWebSocket.on("error", (event) => {
+    clipWebSocketDefault.on("error", (event) => {
       console.log("Connection to CLIP " + dataset + " refused");
     });
   } catch (error) {
-    console.log("Cannot connect to CLIP ' + dataset + ' server");
+    console.log("Cannot connect to CLIP " + dataset + " server");
     console.log(error);
   }
 }
@@ -1171,6 +1171,8 @@ async function queryVideoID(clientId, queryInput) {
     let clientSettings = settingsMap.get(clientId);
     const database = mongoclient.db(config.config_MONGODB); 
     const collection = database.collection("videos"); 
+    let dataset = queryInput.dataset; 
+
 
     // Find the document with the matching text
     let cursor;
@@ -1279,7 +1281,7 @@ async function queryMetadata(clientId, queryInput) {
       results: results,
       totalresults: results.length,
       scores: scores,
-      dataset: "v3c",
+      dataset: dataset,
     };
 
     clientWS = clients.get(clientId);
@@ -1295,6 +1297,7 @@ async function querySpeech(clientId, queryInput) {
     let clientSettings = settingsMap.get(clientId);
     const database = mongoclient.db(config.config_MONGODB); 
     const collection = database.collection("videos");     
+    let dataset = queryInput.dataset;
 
     const regexQuery = new RegExp(queryInput.query, "i"); // Create a case-insensitive regular expression
 
@@ -1368,7 +1371,7 @@ async function querySpeech(clientId, queryInput) {
       results: results,
       totalresults: results.length,
       scores: scores,
-      dataset: "v3c",
+      dataset: dataset,
     };
 
     clientWS = clients.get(clientId);
